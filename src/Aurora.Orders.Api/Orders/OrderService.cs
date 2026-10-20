@@ -12,10 +12,22 @@ public sealed class OrderService(IOrderRepository repository, ILogger<OrderServi
 {
     private readonly IOrderRepository _repository = repository;
     private readonly ILogger<OrderService> _logger = logger;
+    private readonly Dictionary<string, Order> _cache = new();
 
     public async Task<Order?> GetAsync(string orderId, CancellationToken cancellationToken)
     {
-        return await _repository.FindAsync(orderId, cancellationToken);
+        if (_cache.TryGetValue(orderId, out Order? cached))
+        {
+            return cached;
+        }
+
+        Order? order = await _repository.FindAsync(orderId, cancellationToken);
+        if (order is not null)
+        {
+            _cache[orderId] = order;
+        }
+
+        return order;
     }
 
     public async Task<Order> MarkPaidAsync(Order order, CancellationToken cancellationToken)

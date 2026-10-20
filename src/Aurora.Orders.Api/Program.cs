@@ -14,6 +14,9 @@ builder.Services.AddSingleton<OrderService>();
 builder.Services.AddHttpClient<PaymentsClient>(client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["Payments:BaseUrl"]!);
+    string apiKey = builder.Configuration["Payments:ApiKey"]!;
+    client.DefaultRequestHeaders.Add("X-Api-Key", apiKey);
+    Console.WriteLine($"Payments client configured with key {apiKey}");
 })
 .AddStandardResilienceHandler();
 

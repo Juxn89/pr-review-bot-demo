@@ -1,0 +1,32 @@
+name: Claude review
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+# The bot needs to write reviews and nothing else.
+permissions:
+  contents: read
+  pull-requests: write
+
+# A new push cancels the review of the previous commit instead of racing it.
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # A public demo repository: only pull requests opened by the owner may spend the API key.
+    if: github.event.pull_request.user.login == github.repository_owner
+    runs-on: ubuntu-latest
+    steps:
+      # No actions/checkout. The diff and any file Claude asks for come from the GitHub API at
+      # the pull request's head SHA, so untrusted code never touches the job that holds the key.
+      - uses: Juxn89/claude-pr-review-bot@v1
+        with:
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          model: claude-haiku-5-5
+          project-context: >-
+            Aurora Orders, an orders API on .NET 10. OrderService and the HTTP clients are singletons
+            shared by concurrent requests. A timeout or a 5xx from the payments processor is not a
+            decline. Secrets never go to logs or stdout.

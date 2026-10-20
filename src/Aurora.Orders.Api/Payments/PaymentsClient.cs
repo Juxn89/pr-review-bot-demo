@@ -35,9 +35,16 @@ public sealed class PaymentsClient(HttpClient http, ILogger<PaymentsClient> logg
     /// <summary>Charges the card and returns the processor's decision.</summary>
     public async Task<PaymentResult> ChargeAsync(ChargeRequest request, CancellationToken cancellationToken)
     {
-        using HttpResponseMessage response = await http.PostAsJsonAsync("charges", request, cancellationToken);
-        response.EnsureSuccessStatusCode();
-        return (await response.Content.ReadFromJsonAsync<PaymentResult>(cancellationToken))!;
+        try
+        {
+            using HttpResponseMessage response = await http.PostAsJsonAsync("charges", request, cancellationToken);
+            response.EnsureSuccessStatusCode();
+            return (await response.Content.ReadFromJsonAsync<PaymentResult>(cancellationToken))!;
+        }
+        catch (Exception)
+        {
+            return PaymentResult.Declined;
+        }
     }
 
 }
